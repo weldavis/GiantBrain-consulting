@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巨脑咨询 - 智能增强. 成果工程化.</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Michroma&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/alpinejs@3/dist/cdn.min.js" defer></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* 自定义 Tailwind 配置 */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        // 使用 Michroma 作为赛博朋克风格的标题字体
+                        'display': ['Michroma', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'dark-bg': '#020010', /* 采纳自 Nexus AI 文件 */
+                        'neon-blue': '#00F0FF',
+                        'neon-magenta': '#FF00B8',
+                        'neon-purple': '#7800FF',
+                    }
+                }
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: '#020010'; /* 非常深的赛博朋克背景色 */
+            color: #E0E0E0;
+            overflow-x: hidden;
+        }
+        
+        /* 粒子画布样式 */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            opacity: 0.7;
+        }
+
+        /* 霓虹渐变文本 */
+        .text-gradient-neon {
+            background-image: linear-gradient(90deg, #00F0FF, #7800FF, #FF00B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* 玻璃拟态卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* 霓虹辉光按钮 */
+        .btn-neon-glow {
+            position: relative;
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #7800FF, #FF00B8);
+            border-radius: 0.75rem; 
+            overflow: hidden;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+        
+        .btn-neon-glow:hover {
+            box-shadow: 0 0 15px 5px rgba(255, 0, 184, 0.5), 0 0 10px 2px rgba(120, 0, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* 霓虹边框辉光 */
+        .neon-border-glow {
+            position: relative;
+            border-radius: 1.5rem;
+            padding: 2px; 
+            overflow: hidden;
+        }
+        
+        .neon-border-glow::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                transparent,
+                #00F0FF,
+                #FF00B8,
+                transparent 30%
+            );
+            animation: rotate 6s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div x-data="{ 
+            mobileMenuOpen: false, 
+            insights: {
+                current: 0,
+                total: 2,
+                autoSlide: null,
+                slides: [
+                    // --- 第一条洞察日期已更新: 2025年10月24日 -> 2025年10月25日 ---
+                    { title: '业务驱动型营销', content: '系统化营销管理方法论：通过组织、技能等 8 大核心要素，以数据驱动和迭代优化为核心，联动企业与市场动态及客户行为，将营销转化为业务增长核心，助力高效抢占市场份额、获取新客户', date: '2025年10月25日' },
+                    // --- 第二条洞察已更新为敏捷组织主题 ---
+                    { title: '敏捷组织的四大支柱及AI赋能应用案例', content: '聚焦 BANI 时代组织敏捷性的核心价值，围绕文化、领导力、结构、方法四大支柱，结合标杆案例、关键数据与 AI 赋能路径，详解企业敏捷转型的实践指南与未来方向', date: '2025年9月25日' },
+                    // --- 第三条洞察日期已更新: 2077年8月1日 -> 2025年11月25日 ---
+                    { title: '跨越转型深渊：制造业“战略-组织-营销”三维驱动数字化增长的路线图', content: '聚焦制造业数字化转型痛点，提出 “战略引领方向、组织筑牢根基、营销激活增长” 的三维协同路线图，为企业跨越转型鸿沟、实现数字化可持续增长提供实操指引', date: '2025年11月25日' },
+                ],
+                start() {
+                    this.autoSlide = setInterval(() => {
+                        this.current = (this.current < this.total) ? this.current + 1 : 0;
+                    }, 5000);
+                },
+                stop() {
+                    clearInterval(this.autoSlide);
+                },
+                next() { this.current = (this.current + 1) % (this.total + 1); },
+                prev() { this.current = (this.current - 1 + (this.total + 1)) % (this.total + 1); }
+            }
+            /* 原有的 contactForm 已经被移除，因为它不再被使用。
+            */
+         }"
+         x-init="insights.start()"
+         class="relative z-10 min-h-screen">
+
+        <header class="fixed top-0 left-0 right-0 z-50 glass-card m-4 rounded-full border-none">
+            <nav class="container mx-auto px-6 py-4 max-w-6xl">
+                <div class="flex justify-between items-center">
+                    <a href="#hero" class="text-3xl font-display font-black text-white">
+                        Giant<span class="text-gradient-neon">Brain</span>
+                    </a>
+
+                    <div class="hidden md:flex space-x-8 font-body font-semibold">
+                        <a href="#company" class="text-gray-300 hover:text-neon-blue transition duration-300">关于我们</a>
+                        <a href="#services" class="text-gray-300 hover:text-neon-blue transition duration-300">服务内容</a>
+                        <a href="#insights" class="text-gray-300 hover:text-neon-blue transition duration-300">前沿洞察</a>
+                        <a href="#contact" class="text-gradient-neon transition duration-300">联系我们</a>
+                    </div>
+
+                    <div class="md:hidden">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-white focus:outline-none p-2 rounded-full hover:bg-white/10 transition">
+                            <i x-show="!mobileMenuOpen" data-lucide="menu" class="w-8 h-8"></i>
+                            <i x-show="mobileMenuOpen" data-lucide="x" class="w-8 h-8"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="mobileMenuOpen" 
+                     @click.away="mobileMenuOpen = false"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform -translate-y-4"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 transform translate-y-0"
+                     x-transition:leave-end="opacity-0 transform -translate-y-4"
+                     class="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-card rounded-2xl py-4 shadow-xl text-center">
+                    <a href="#company" @click="mobileMenuOpen = false" class="block px-6 py-3 text-gray-200 hover:text-neon-blue transition duration-200 border-b border-white/10">关于我们</a>
+                    <a href="#services" @click="mobileMenuOpen = false" class="block px-6 py-3 text-gray-200 hover:text-neon-blue transition duration-200 border-b border-white/10">服务内容</a>
+                    <a href="#insights" @click="mobileMenuOpen = false" class="block px-6 py-3 text-gray-200 hover:text-neon-blue transition duration-200 border-b border-white/10">前沿洞察</a>
+                    <a href="#contact" @click="mobileMenuOpen = false" class="block px-6 py-3 text-gradient-neon">联系我们</a>
+                </div>
+            </nav>
+        </header>
+
+        <main class="container mx-auto max-w-6xl px-4">
+
+            <section id="hero" class="min-h-screen flex items-center justify-center text-center pt-32 md:pt-24">
+                <div class="max-w-4xl">
+                    <h1 class="text-6xl md:text-8xl font-display font-extrabold leading-tight">
+                        <span class="text-gradient-neon">GiantBrain Consulting</span>
+                    </h1>
+                    
+                    <h2 class="text-4xl md:text-7xl font-extrabold text-white mt-4">
+                        AI融合解决方案
+                    </h2>
+                    
+                    <p class="text-lg md:text-xl text-gray-300 mt-8 max-w-3xl mx-auto">
+                        提供以终为始, “定战略、搭班子、带队伍"一站式敏捷咨询
+                    </p>
+                    
+                    <div class="mt-12"> 
+                        <a href="#services" class="btn-neon-glow">
+                            探索服务
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="company" class="py-24 md:py-32 border-t border-white/10">
+                <h2 class="text-5xl font-display font-bold text-center mb-16">
+                    我们的<span class="text-gradient-neon">核心价值</span>
+                </h2>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card p-8 text-center border-t-4 border-neon-purple/50">
+                        <i data-lucide="award" class="w-12 h-12 text-neon-purple mx-auto mb-4"></i>
+                        <h3 class="text-2xl font-bold mb-3 text-white">高质量</h3>
+                        <p class="text-gray-300">利用深度智能与行业经验相结合，确保咨询成果和解决方案具有最高标准和可持续性</p>
+                    </div>
+
+                    <div class="glass-card p-8 text-center border-t-4 border-neon-blue/50">
+                        <i data-lucide="dollar-sign" class="w-12 h-12 text-neon-blue mx-auto mb-4"></i>
+                        <h3 class="text-2xl font-bold mb-3 text-white">低成本</h3>
+                        <p class="text-gray-300">通过 AI 驱动的流程优化和资源整合，显著降低项目总拥有成本 (TCO)，实现高效的投入产出比</p>
+                    </div>
+
+                    <div class="glass-card p-8 text-center border-t-4 border-neon-magenta/50">
+                        <i data-lucide="zap" class="w-12 h-12 text-neon-magenta mx-auto mb-4"></i>
+                        <h3 class="text-2xl font-bold mb-3 text-white">快交付</h3>
+                        <p class="text-gray-300">采用高度敏捷的交付框架和工程化方法，大幅缩短从战略规划到价值实现的时间</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="services" class="py-24 md:py-32 border-t border-white/10">
+                <h2 class="text-5xl font-display font-bold text-center mb-16">
+                    我们的<span class="text-gradient-neon">服务</span>
+                </h2>
+                
+                <div class="space-y-12">
+                    <div class="glass-card p-8 md:p-12 flex flex-col md:flex-row items-center hover:shadow-2xl hover:shadow-neon-blue/20 transition duration-300">
+                        <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-10">
+                            <i data-lucide="factory" class="w-16 h-16 text-neon-blue"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-display font-semibold mb-3 text-neon-blue">企业战略与远见</h3>
+                            <p class="text-gray-300">我们利用前沿数据模型模拟市场未来，精准识别第二增长曲线，并设计数据驱动的投资路线图，确保企业在未来五年内拥有长期竞争优势</p>
+                            </div>
+                    </div>
+
+                    <div class="glass-card p-8 md:p-12 flex flex-col md:flex-row items-center hover:shadow-2xl hover:shadow-neon-magenta/20 transition duration-300">
+                        <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-10">
+                            <i data-lucide="users" class="w-16 h-16 text-neon-magenta"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-display font-semibold mb-3 text-neon-magenta">高效组织与人才激活</h3>
+                            <p class="text-gray-300">我们重塑组织结构和激励机制，激活中高层人才的自驱力。目标是消除组织内耗，构建一个能敏捷响应战略、高效执行任务的高绩效系统</p>
+                            </div>
+                    </div>
+
+                    <div class="glass-card p-8 md:p-12 flex flex-col md:flex-row items-center hover:shadow-2xl hover:shadow-neon-blue/20 transition duration-300">
+                        <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-10">
+                            <i data-lucide="bar-chart-2" class="w-16 h-16 text-neon-blue"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-display font-semibold mb-3 text-neon-blue">营收增长与营销飞轮</h3>
+                            <p class="text-gray-300">我们专注于构建一套可量化、可预测的营收增长系统。通过优化全链路转化，精准锁定高价值客户，确保您的每一分营销投入都实现最高投资回报率 (ROI)</p>
+                            </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="insights" class="py-24 md:py-32 border-t border-white/10">
+                <h2 class="text-5xl font-display font-bold text-center mb-16">
+                    前沿<span class="text-gradient-neon">洞察</span>
+                </h2>
+
+                <div class="relative max-w-4xl mx-auto h-96" 
+                     @mouseenter="insights.stop()" 
+                     @mouseleave="insights.start()">
+                    
+                    <div class="relative overflow-hidden h-full rounded-2xl">
+                        <template x-for="(slide, index) in insights.slides" :key="index">
+                            <div x-show="insights.current === index" 
+                                 x-transition:enter="transition ease-out duration-700" 
+                                 x-transition:enter-start="opacity-0 transform translate-x-1/2" 
+                                 x-transition:enter-end="opacity-100 transform translate-x-0" 
+                                 x-transition:leave="transition ease-in duration-500" 
+                                 x-transition:leave-start="opacity-100 transform translate-x-0" 
+                                 x-transition:leave-end="opacity-0 transform -translate-x-1/2" 
+                                 class="glass-card p-10 md:p-16 h-full absolute inset-0 flex flex-col justify-center">
+                                <h3 class="text-3xl font-display text-neon-magenta mb-4" x-text="slide.title"></h3>
+                                <p class="text-lg text-gray-300 mb-6" x-text="slide.content"></p>
+                                <span class="text-sm text-neon-blue font-semibold" x-text="slide.date"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <button @click="insights.prev()" class="absolute top-1/2 -left-16 transform -translate-y-1/2 p-3 rounded-full glass-card text-white hover:text-cyan-400 transition hidden md:block">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                    </button>
+                    <button @click="insights.next()" class="absolute top-1/2 -right-16 transform -translate-y-1/2 p-3 rounded-full glass-card text-white hover:text-cyan-400 transition hidden md:block">
+                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                    </button>
+                    
+                    <div class="flex justify-center space-x-3 mt-8">
+                        <template x-for="(slide, index) in insights.slides" :key="index">
+                            <button @click="insights.current = index" :class="{'bg-neon-magenta': insights.current === index, 'bg-gray-700': insights.current !== index}" class="w-3 h-3 rounded-full transition-colors duration-300"></button>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact" class="py-24 md:py-32 border-t border-white/10">
+                <h2 class="text-5xl font-display font-bold text-center mb-16">
+                    联系<span class="text-gradient-neon">我们</span>
+                </h2>
+                
+                <div class="max-w-xl mx-auto neon-border-glow">
+                    <div class="glass-card p-8 md:p-12 h-full flex flex-col items-center text-center">
+                        
+                        <p class="text-xl text-gray-300 mb-6">
+                            扫描下方二维码，与我们的智能体建立加密连接，即刻开启合作咨询。
+                        </p>
+                        
+                        <div class="w-56 h-56 p-4 bg-white rounded-xl shadow-lg border-2 border-neon-blue/50">
+                            <img src="./contact_qr.png" alt="联系二维码" class="w-full h-full object-cover">
+                        </div>
+                        
+                        <p class="text-lg font-display text-neon-blue mt-6">
+                            **[ GiantBrain Link Established ]**
+                        </p>
+                        
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="py-12 border-t border-white/10">
+            <div class="container mx-auto max-w-6xl px-4 text-center text-gray-400">
+                <a href="#hero" class="text-3xl font-display font-black text-neon-blue mb-4 inline-block">
+                    Giant<span class="text-neon-magenta">Brain</span>
+                </a>
+                <p class="font-body">&copy; 2025 GiantBrain Consulting. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let scene, camera, renderer, particles, geometry, material;
+            let mouseX = 0, mouseY = 0;
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
+            
+            // 初始化 Lucide Icons
+            lucide.createIcons();
+
+            function init() {
+                // 场景
+                scene = new THREE.Scene();
+                
+                // 相机
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+                camera.position.z = 1000;
+
+                // 几何体
+                geometry = new THREE.BufferGeometry();
+                const vertices = [];
+                const numParticles = 10000;
+
+                for (let i = 0; i < numParticles; i++) {
+                    const x = (Math.random() - 0.5) * 2000;
+                    const y = (Math.random() - 0.5) * 2000;
+                    const z = (Math.random() - 0.5) * 2000;
+                    vertices.push(x, y, z);
+                }
+
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                
+                // 材质 (霓虹色点)
+                material = new THREE.PointsMaterial({
+                    size: 2,
+                    color: 0x00F0FF, // 霓虹青色
+                    transparent: true,
+                    opacity: 0.7,
+                    blending: THREE.AdditiveBlending
+                });
+
+                // 粒子
+                particles = new THREE.Points(geometry, material);
+                scene.add(particles);
+
+                // 渲染器
+                renderer = new THREE.WebGLRenderer({
+                    canvas: document.getElementById('particle-canvas'),
+                    alpha: true // 透明背景
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                // 事件监听
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+                document.addEventListener('touchstart', onDocumentTouchStart, false);
+                document.addEventListener('touchmove', onDocumentTouchMove, false);
+                window.addEventListener('resize', onWindowResize, false);
+            }
+
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function onDocumentMouseMove(event) {
+                mouseX = event.clientX - windowHalfX;
+                mouseY = event.clientY - windowHalfY;
+            }
+            
+            function onDocumentTouchStart( event ) {
+                if ( event.touches.length === 1 ) {
+                    event.preventDefault();
+                    mouseX = event.touches[ 0 ].pageX - windowHalfX;
+                    mouseY = event.touches[ 0 ].pageY - windowHalfX;
+                }
+            }
+
+            function onDocumentTouchMove( event ) {
+                if ( event.touches.length === 1 ) {
+                    event.preventDefault();
+                    mouseX = event.touches[ 0 ].pageX - windowHalfX;
+                    mouseY = event.touches[ 0 ].pageY - windowHalfX;
+                }
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                render();
+            }
+
+            function render() {
+                const time = Date.now() * 0.00005;
+
+                // 鼠标交互
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                // 粒子旋转
+                particles.rotation.x = time * 0.2;
+                particles.rotation.y = time * 0.4;
+
+                renderer.render(scene, camera);
+            }
+
+            init();
+            animate();
+        });
+    </script>
+</body>
+</html>
