@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>巨脑咨询 - 智能增强. 成果工程化.</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -154,8 +153,8 @@
                 },
                 next() { this.current = (this.current + 1) % (this.total + 1); },
                 prev() { this.current = (this.current - 1 + (this.total + 1)) % (this.total + 1); }
-            } 
-            /* 原有的 contactForm 数据已移除 */
+            }
+            /* contactForm 数据已移除，因为它不再被使用 */
          }"
          x-init="insights.start()"
          class="relative z-10 min-h-screen">
@@ -448,3 +447,33 @@
                 if ( event.touches.length === 1 ) {
                     event.preventDefault();
                     mouseX = event.touches[ 0 ].pageX - windowHalfX;
+                    mouseY = event.touches[ 0 ].pageY - windowHalfX;
+                }
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                render();
+            }
+
+            function render() {
+                const time = Date.now() * 0.00005;
+
+                // 鼠标交互
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                // 粒子旋转
+                particles.rotation.x = time * 0.2;
+                particles.rotation.y = time * 0.4;
+
+                renderer.render(scene, camera);
+            }
+
+            init();
+            animate();
+        });
+    </script>
+</body>
+</html>
